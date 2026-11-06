@@ -12,7 +12,7 @@ class LapLembur extends Model
 
     public $timestamps = false;
 
-    protected $table = 'laplemburs'; 
+    protected $table = 'laplemburs';
 
     protected $fillable = [
         'nip',
@@ -25,6 +25,9 @@ class LapLembur extends Model
         'keterangan',
         'durasi',
         'status',
+        'status_hrd', // ← ini juga
+        'status_kepala_divisi', // ← dan ini
+        'status_direktur',
         'keterangan_penolakan',
     ];
 }

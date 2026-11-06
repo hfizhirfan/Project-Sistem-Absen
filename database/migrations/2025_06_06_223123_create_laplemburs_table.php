@@ -24,7 +24,6 @@ return new class extends Migration
 
             $table->enum('status_hrd', ['pending', 'disetujui', 'ditolak'])->default('pending');
             $table->enum('status_kepala_divisi', ['pending', 'disetujui', 'ditolak'])->default('pending');
-            $table->enum('status_direktur', ['pending', 'disetujui', 'ditolak'])->default('pending');
 
             $table->text('keterangan_penolakan')->nullable();
             $table->timestamps();

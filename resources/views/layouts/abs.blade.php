@@ -130,13 +130,25 @@
 
     <script>
         // Atur waktu sekarang ke input jam_absen
-        window.addEventListener('DOMContentLoaded', function () {
+         function updateJamAbsen() {
             const input = document.getElementById('jam_absen');
-            if (input) {
-                const now = new Date();
-                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-                input.value = now.toISOString().slice(0, 16);
-            }
+            const now = new Date();
+
+            const tgl = String(now.getDate()).padStart(2, '0');
+            const bln = String(now.getMonth() + 1).padStart(2, '0');
+            const thn = now.getFullYear();
+
+            const jam = String(now.getHours()).padStart(2, '0');
+            const menit = String(now.getMinutes()).padStart(2, '0');
+            const detik = String(now.getSeconds()).padStart(2, '0');
+
+            // Format: dd/mm/yyyy HH:MM:SS
+            input.value = `${tgl}/${bln}/${thn} ${jam}:${menit}:${detik}`;
+        }
+
+        window.addEventListener('DOMContentLoaded', function () {
+            updateJamAbsen();
+            setInterval(updateJamAbsen, 1000);
         });
 
         // Toggle dropdown

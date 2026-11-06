@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\MasterKaryawan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 
 class MasterKaryawanController extends Controller
@@ -34,33 +36,52 @@ class MasterKaryawanController extends Controller
      */
     public function store(Request $request)
     {
+        $messages = [
+            'nip.required'   => 'NIP wajib diisi.',
+            'nip.unique'     => 'NIP sudah terdaftar.',
+            'nip.regex'      => 'Format NIP harus berupa 6 digit angka.',
+            'nama.required'  => 'Nama wajib diisi.',
+            'jabatan.required' => 'Jabatan wajib diisi.',
+            'divisi.required'  => 'Divisi wajib diisi.',
+        ];
+
         $validated = $request->validate([
-            'nip' => 'required|max:45|unique:master_karyawans,nip',
-            'nama' => 'required|max:45',
+            'nip'     => 'required|regex:/^\d{6}$/|unique:master_karyawans,nip',
+            'nama'    => 'required|max:45',
             'jabatan' => 'required|max:45',
-            'divisi' => 'required|max:45',
-        ]);
+            'divisi'  => 'required|max:45',
+        ], $messages);
 
-        $nama = strtolower($request->nama);
-        $nip = $request->nip;
-        $lastThreeDigits = substr($nip, -3);
-        $password = Hash::make($nama . $lastThreeDigits);
+        $nip     = $request->nip;
+        $jabatan = $request->jabatan;
 
-        $role = $this->getRoleFromNip($nip); // otomatis berdasarkan NIP
+        // Hitung role versi NIP dan versi jabatan
+        $roleFromNip     = $this->getRoleFromNip($nip);
+        $roleFromJabatan = $this->getExpectedRoleFromJabatan($jabatan);
+
+        if ($roleFromNip !== $roleFromJabatan) {
+            // kembalikan dengan error
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'jabatan' => 'Jabatan tidak sesuai dengan golongan NIP.',
+                ]);
+        }
+
+        $password = Hash::make(Str::random(10));
 
         MasterKaryawan::create([
-            'nip' => $nip,
-            'nama' => $request->nama,
-            'jabatan' => $request->jabatan,
-            'divisi' => $request->divisi,
-            'role' => $role,
+            'nip'      => $nip,
+            'nama'     => $request->nama,
+            'jabatan'  => $jabatan,
+            'divisi'   => $request->divisi,
+            'role'     => $roleFromJabatan,   // keduanya sudah sama
             'password' => $password,
         ]);
 
-        return redirect()->route('karyawan.index')->with('success', 'Karyawan berhasil ditambahkan!');
+        return redirect()->route('karyawan.index')
+            ->with('success', 'Karyawan berhasil ditambahkan!');
     }
-
-
     /**
      * Display the specified resource.
      */
@@ -83,28 +104,49 @@ class MasterKaryawanController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $messages = [
+            'nip.required'   => 'NIP wajib diisi.',
+            'nip.unique'     => 'NIP sudah terdaftar.',
+            'nama.required'  => 'Nama wajib diisi.',
+            'jabatan.required' => 'Jabatan wajib diisi.',
+            'divisi.required'  => 'Divisi wajib diisi.',
+        ];
+
         $request->validate([
-            'nip' => 'required|max:45|unique:master_karyawans,nip,' . $id,
-            'nama' => 'required|max:45',
+            'nip'     => 'required|regex:/^\d{6}$/|unique:master_karyawans,nip,' . $id,
+            'nama'    => 'required|max:45',
             'jabatan' => 'required|max:45',
-            'divisi' => 'required|max:45',
-        ]);
+            'divisi'  => 'required|max:45',
+        ], $messages);
 
         $karyawan = MasterKaryawan::findOrFail($id);
 
-        $role = $this->getRoleFromNip($request->nip); // otomatis update role jika NIP berubah
+        // 1. role versi NIP
+        $roleFromNip = $this->getRoleFromNip($request->nip);
 
+        // 2. role versi Jabatan
+        $roleFromJabatan = $this->getExpectedRoleFromJabatan($request->jabatan);
+
+        // 3. Cek konsistensi
+        if ($roleFromNip !== $roleFromJabatan) {
+            return back()
+                ->withInput()
+                ->withErrors(['jabatan' => 'Jabatan tidak sesuai dengan golongan NIP.']);
+        }
+
+        // 4. Jika konsisten → simpan
         $karyawan->update([
-            'nip' => $request->nip,
-            'nama' => $request->nama,
-            'jabatan' => $request->jabatan,
+            'nip'    => $request->nip,
+            'nama'   => $request->nama,
+            'jabatan'=> $request->jabatan,
             'divisi' => $request->divisi,
-            'role' => $role,
+            'role'   => $roleFromNip, // keduanya sama
         ]);
 
-        return redirect()->route('karyawan.index')->with('success', 'Data karyawan berhasil diperbarui.');
+        return redirect()
+            ->route('karyawan.index')
+            ->with('success', 'Data karyawan berhasil diperbarui.');
     }
-
 
     /**
      * Remove the specified resource from storage.
@@ -128,4 +170,18 @@ class MasterKaryawanController extends Controller
             default => 'karyawan',
         };
     }
+
+    private function getExpectedRoleFromJabatan(string $jabatan): string
+    {
+        $jabatan = strtolower($jabatan);
+
+        return match (true) {
+            str_contains($jabatan, 'direktur') => 'direktur',
+            str_contains($jabatan, 'hrd') => 'hrd',
+            str_contains($jabatan, 'kepala') || str_contains($jabatan, 'manager') || str_contains($jabatan, 'supervisor') => 'kepala_divisi',
+            default => 'karyawan',
+        };
+    }
+
+
 }

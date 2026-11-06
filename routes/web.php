@@ -11,6 +11,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AbsenPimpinanController;
 use App\Http\Controllers\AbsenController;
 use App\Http\Controllers\PengajuanController;
+use App\Http\Controllers\RiwayatController;
 
 
 Route::get('/', [LoginController::class, 'index'])->name('login');
@@ -57,6 +58,9 @@ Route::delete('/lapcuti/{id}', [LapcutiController::class, 'destroy'])->name('lap
 Route::get('/absen', [AbsenController::class, 'create'])->name('absen.create');
 Route::post('/absen', [AbsenController::class, 'store'])->name('absen.store');
 Route::get('/izin/pdf/{id}', [LapizinController::class, 'downloadPDF'])->name('izin.download.pdf');
+Route::get('/lembur/pdf/{id}', [LaplemburController::class, 'downloadPDF'])->name('lembur.download.pdf');
+Route::get('/cuti/pdf/{id}', [LapcutiController::class, 'downloadPDF'])->name('cuti.download.pdf');
+
 
 
 Route::get('/izin', [PengajuanController::class, 'createIzin'])->name('pengajuan.izin');
@@ -67,6 +71,9 @@ Route::post('/cuti', [PengajuanController::class, 'storeCuti'])->name('pengajuan
 
 Route::get('/lembur', [PengajuanController::class, 'createLembur'])->name('pengajuan.lembur');
 Route::post('/lembur', [PengajuanController::class, 'storeLembur'])->name('pengajuan.lembur.store');
+
+
+Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat.index');
 
 
 

@@ -15,51 +15,7 @@ class LapizinController extends Controller
         $lapizins = lapizin::all();
         return view('lapizin.index', compact('lapizins'));  }
 
-    public function create()
-    {
-        //
-        return view('lapizin.create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        // Validasi
-        $request->validate([
-            'nip' => 'required|string|max:20',
-            'nama' => 'required|string|max:100',
-            'jabatan' => 'required|string|max:50',
-            'divisi' => 'required|string|max:50',
-            'tanggal_cuti' => 'required|date',
-            'tanggal_masuk' => 'required|date',
-            'keterangan' => 'nullable|string',
-            'bukti' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', // opsional
-        ]);
-
-        // Upload file jika ada
-        $buktiPath = null;
-        if ($request->hasFile('bukti')) {
-            $buktiPath = $request->file('bukti')->store('bukti_izin', 'public');
-        }
-
-        // Simpan ke DB
-        lapizin::create([
-            'nip' => $request->nip,
-            'nama' => $request->nama,
-            'jabatan' => $request->jabatan,
-            'divisi' => $request->divisi,
-            'tanggal_izin' => $request->tanggal_cuti,
-            'tanggal_masuk' => $request->tanggal_masuk,
-            'keterangan' => $request->keterangan,
-            'keterangan_penolakan' => $request->status == 'ditolak' ? $request->keterangan : null,
-            'bukti' => $buktiPath,
-        ]);
-
-        return redirect()->route('lapabsen.create')->with('success', 'Pengajuan izin berhasil dikirim.');
-    }
-
+    
 
     public function edit($id)
     {

@@ -42,12 +42,14 @@ class LoginController extends Controller
         }
 
         $request->session()->put([
+            'id' => $karyawan->id, // ⬅️ Tambahkan ini
             'nip' => $karyawan->nip,
             'nama' => $karyawan->nama,
             'jabatan' => $karyawan->jabatan,
             'divisi' => $karyawan->divisi,
             'role' => $karyawan->role,
         ]);
+
 
         Log::info('Role yang terdeteksi:', ['role' => $karyawan->role]);
 

@@ -16,6 +16,9 @@ class lapcuti extends Model
         'tanggal_masuk',
         'keterangan',
         'status',
+        'status_hrd', // ← ini juga
+        'status_kepala_divisi', // ← dan ini
+        'status_direktur',
         'keterangan_penolakan',
     ];
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\lapcuti;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LapcutiController extends Controller
 {
@@ -15,56 +16,6 @@ class LapcutiController extends Controller
         return view('lapcuti.index', compact('lapcutis'));
     }
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('lapcuti.create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-
-       $request->validate([
-            'nip' => 'required|string|max:20',
-            'nama' => 'required|string|max:100',
-            'jabatan' => 'required|string|max:50',
-            'divisi' => 'required|string|max:50',
-            'tanggal_izin' => 'required|date',
-            'tanggal_masuk' => 'required|date',
-            'keterangan' => 'nullable|string',
-        ]);
-
-        lapcuti::create([
-            'nip' => $request->nip,
-            'nama' => $request->nama,
-            'jabatan' => $request->jabatan,
-            'divisi' => $request->divisi,
-            'tanggal_izin' => $request->tanggal_izin, // disesuaikan
-            'tanggal_masuk' => $request->tanggal_masuk,
-            'keterangan' => $request->keterangan,
-            'status' => 'pending', // default saat pengajuan
-        ]);
-
-        return redirect()->route('lapabsen.create')->with('success', 'Pengajuan cuti berhasil dikirim.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $lapcuti = lapcuti::findOrFail($id); // Ambil data berdasarkan ID
@@ -148,5 +99,13 @@ class LapcutiController extends Controller
         $lapcuti->delete();
 
         return redirect()->route('lapcuti.index')->with('success', 'Data lembur berhasil dihapus.');
+    }
+
+     public function downloadPDF($id)
+    {
+        $cuti = lapcuti::findOrFail($id);
+
+        $pdf = Pdf::loadView('pdf.cuti', compact('cuti'));
+        return $pdf->download("cuti_{$cuti->nip}.pdf");
     }
 }

@@ -82,6 +82,11 @@
                             <div class="sb-nav-link-icon"><i class="fa-solid fa-note-sticky"></i></div>
                             Laporan Cuti
                         </a>
+
+                        {{-- <a class="nav-link" href="{{ route('riwayat.index') }}">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                            Riwayat Laporan
+                        </a> --}}
                         @endif
 
                     </div>

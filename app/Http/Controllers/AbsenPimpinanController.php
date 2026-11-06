@@ -41,21 +41,24 @@ class AbsenPimpinanController extends Controller
             'nama' => 'required|string|max:100',
             'jabatan' => 'required|string|max:50',
             'divisi' => 'required|string|max:50',
-            'jam_absen' => 'required|date',
+            'jam_absen' => 'required', // Hapus 'date' agar tidak error
         ]);
+
+        // Konversi dari format "dd/mm/yyyy HH:MM:SS" ke format MySQL "yyyy-mm-dd HH:MM:SS"
+        $jamAbsenMysql = Carbon::createFromFormat('d/m/Y H:i:s', $request->jam_absen)
+            ->format('Y-m-d H:i:s');
 
         DB::table('lapabsen')->insert([
             'nip' => $request->nip,
             'nama' => $request->nama,
             'jabatan' => $request->jabatan,
             'divisi' => $request->divisi,
-            'jam_absen' => $request->jam_absen,
+            'jam_absen' => $jamAbsenMysql,
         ]);
 
-        // Set session sesuai waktu input absen
         session([
             'sudah_absen' => true,
-            'waktu_absen' => $request->jam_absen,
+            'waktu_absen' => $jamAbsenMysql,
         ]);
 
         $role = session('role');
@@ -65,10 +68,10 @@ class AbsenPimpinanController extends Controller
         } elseif ($role === 'kepala_divisi') {
             return redirect()->route('laplembur.index');
         } else {
-            return redirect()->route('absen.pimpinan'); // fallback
+            return redirect()->route('absen.pimpinan');
         }
-
     }
+
 
 
 }

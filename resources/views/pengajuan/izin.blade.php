@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Halaman Absen')
+@section('title', 'Halaman Pengajuan Izin')
 
 @section('content')
 
@@ -46,7 +46,7 @@
 
                 <div class="mb-3">
                     <label for="bukti" class="form-label">Bukti Surat Dokter</label>
-                    <input type="file" class="form-control" id="bukti" name="bukti" accept=".jpg,.jpeg,.png" required>
+                    <input type="file" class="form-control" id="bukti" name="bukti" accept=".jpg,.jpeg,.png" .>
                 </div>
 
 

@@ -86,9 +86,12 @@
             text-decoration: none;
             color: #333;
         }
-        .dropdown-menu a:hover {
-            background-color: #f5f5f5;
+
+        .dropdown-menu .dropdown-item:hover {
+            background-color: transparent !important;
         }
+
+
 
         .custom-button-wrapper {
             margin-top: 60px; /* Jarak antar elemen */
@@ -107,93 +110,181 @@
         }
 
         .custom-rounded-button:hover {
-            background-color: #fefefe;
+            background-color: #000000;
         }
+
+
+        .notification-icon .badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            font-size: 0.6rem;
+        }
+
     </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <a class="navbar-brand">PT XYZ</a>
-        <div class="ms-auto dropdown">
-            <a class="nav-link user-icon" href="#" id="userIcon">
-                <i class="fas fa-user"></i>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" id="dropdownMenu">
-                <li>
-                    <form id="logoutForm" action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="dropdown-item">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
-                    </form>
-                </li>
-            </ul>
+        <div class="ms-auto d-flex align-items-center">
+            <div class="me-3">
+                <a class="nav-link" href="{{ route('riwayat.index') }}" title="Riwayat Pengajuan">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </a>
+            </div>
+            <!-- Notification Bell -->
+            <div class="dropdown me-3">
+                <a class="nav-link notification-icon position-relative" href="#" id="notificationIcon">
+                    <i class="fas fa-bell"></i>
+                    @php
+                        $jumlahNotif = 0;
+                        if (isset($izinStatus) && in_array($izinStatus, ['disetujui', 'ditolak'])) $jumlahNotif++;
+                        if (isset($lemburStatus) && in_array($lemburStatus, ['disetujui', 'ditolak'])) $jumlahNotif++;
+                        if (isset($cutiStatus) && in_array($cutiStatus, ['disetujui', 'ditolak'])) $jumlahNotif++;
+                    @endphp
+                    @if ($jumlahNotif > 0)
+                        <span class="badge bg-danger">{{ $jumlahNotif }}</span>
+                    @endif
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" id="notificationMenu">
+                    {{-- Izin --}}
+                    @if (isset($izinStatus))
+                        @if ($izinStatus == 'disetujui')
+                            <li class="dropdown-item small">
+                                Pengajuan izin Anda <strong>disetujui</strong>.
+                                @if ($pdfAvailable)
+                                    <br><a href="{{ route('izin.download.pdf', $izin->id) }}" class="btn btn-outline-primary mt-2"><i class="fas fa-file-download"></i> Download PDF Izin</a>
+                                @endif
+                            </li>
+                        @elseif ($izinStatus == 'ditolak')
+                            <li class="dropdown-item small text-danger">
+                                Pengajuan izin Anda <strong>ditolak</strong>.
+                                <br><em>{{ $izin->keterangan_penolakan ?? 'Tidak ada keterangan' }}</em>
+                            </li>
+                        @endif
+                    @endif
+
+                    {{-- Lembur --}}
+                    @if (isset($lemburStatus))
+                        @if ($lemburStatus == 'disetujui')
+                            <li class="dropdown-item small">
+                                Pengajuan lembur Anda <strong>disetujui</strong>.
+                                @if ($lemburPdfAvailable)
+                                    <br><a href="{{ route('lembur.download.pdf', $lembur->id) }}" class="btn btn-outline-primary mt-2"><i class="fas fa-file-download"></i> Download PDF Lembur</a>
+                                @endif
+                            </li>
+                        @elseif ($lemburStatus == 'ditolak')
+                            <li class="dropdown-item small text-danger">
+                                Pengajuan lembur Anda <strong>ditolak</strong>.
+                                <br><em>{{ $lembur->keterangan_penolakan ?? 'Tidak ada keterangan' }}</em>
+                            </li>
+                        @endif
+                    @endif
+
+                    {{-- Cuti --}}
+                    @if (isset($cutiStatus))
+                        @if ($cutiStatus == 'disetujui')
+                            <li class="dropdown-item small">
+                                Pengajuan cuti Anda <strong>disetujui</strong>.
+                                @if ($cutiPdfAvailable)
+                                    <br><a href="{{ route('cuti.download.pdf', $cuti->id) }}" class="btn btn-outline-primary mt-2"><i class="fas fa-file-download"></i> Download PDF Cuti</a>
+                                @endif
+                            </li>
+                        @elseif ($cutiStatus == 'ditolak')
+                            <li class="dropdown-item small text-danger">
+                                Pengajuan cuti Anda <strong>ditolak</strong>.
+                                <br><em>{{ $cuti->keterangan_penolakan ?? 'Tidak ada keterangan' }}</em>
+                            </li>
+                        @endif
+                    @endif
+
+                    @if ($jumlahNotif == 0)
+                        <li class="dropdown-item text-muted">Tidak ada notifikasi</li>
+                    @endif
+                </ul>
+            </div>
+
+            <!-- User Icon -->
+            <div class="dropdown">
+                <a class="nav-link user-icon" href="#" id="userIcon">
+                    <i class="fas fa-user"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end" id="dropdownMenu">
+                    <li>
+                        <form id="logoutForm" action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
-
-    @if (isset($izinStatus) && $izinStatus == 'disetujui')
-        <div class="alert alert-success">
-            Pengajuan izin Anda telah <strong>disetujui</strong> oleh semua pihak.
-            @if ($pdfAvailable)
-                <br>
-                <a href="{{ route('izin.download.pdf', $izin->id) }}" class="btn btn-outline-primary mt-2">
-                    <i class="fas fa-file-download"></i> Download PDF Izin
-                </a>
-            @endif
-        </div>
-    @elseif (isset($izinStatus) && $izinStatus == 'ditolak')
-        <div class="alert alert-danger">
-            Pengajuan izin Anda telah <strong>ditolak</strong>. Alasan:
-            <br>
-            <em>{{ $izin->keterangan_penolakan ?? 'Tidak ada keterangan' }}</em>
-        </div>
-    @endif
-
     @yield('content')
     <!-- Main content -->
 
     <!-- JS -->
     <script>
-        // Set nilai jam absen ke waktu sekarang saat halaman dimuat
-        window.addEventListener('DOMContentLoaded', function () {
-            const input = document.getElementById('jam_absen');
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            input.value = now.toISOString().slice(0, 16);
-        });
+        document.addEventListener('DOMContentLoaded', function () {
 
-        // Highlight tombol pengajuan saat hover
-        const lemburBtn = document.getElementById("btn-lembur");
-        const cutiBtn = document.getElementById("btn-cuti");
-        const izinBtn = document.getElementById("btn-izin");
 
-        [cutiBtn, izinBtn].forEach((btn) => {
-            btn.addEventListener("mouseenter", () => {
-                lemburBtn.classList.remove("active-btn");
-                btn.classList.add("active-btn");
-            });
-            btn.addEventListener("mouseleave", () => {
-                lemburBtn.classList.add("active-btn");
-                btn.classList.remove("active-btn");
-            });
-        });
+            // Notification Dropdown
+            const notificationIcon = document.getElementById('notificationIcon');
+            const notificationMenu = document.getElementById('notificationMenu');
 
-        // Dropdown toggle
-        const userIcon = document.getElementById('userIcon');
-        const dropdownMenu = document.getElementById('dropdownMenu');
+            if (notificationIcon && notificationMenu) {
+                notificationIcon.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    notificationMenu.classList.toggle('show');
+                });
 
-        userIcon.addEventListener('click', function (e) {
-            e.preventDefault();
-            dropdownMenu.classList.toggle('show');
-        });
+                window.addEventListener('click', function (e) {
+                    if (!notificationIcon.contains(e.target) && !notificationMenu.contains(e.target)) {
+                        notificationMenu.classList.remove('show');
+                    }
+                });
+            }
 
-        window.addEventListener('click', function (e) {
-            if (!userIcon.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                dropdownMenu.classList.remove('show');
+            // User Dropdown
+            const userIcon = document.getElementById('userIcon');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            if (userIcon && dropdownMenu) {
+                userIcon.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                window.addEventListener('click', function (e) {
+                    if (!userIcon.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                });
+            }
+
+            // Tombol Pengajuan Hover Effect
+            const lemburBtn = document.getElementById("btn-lembur");
+            const cutiBtn = document.getElementById("btn-cuti");
+            const izinBtn = document.getElementById("btn-izin");
+
+            if (lemburBtn && cutiBtn && izinBtn) {
+                [cutiBtn, izinBtn].forEach((btn) => {
+                    btn.addEventListener("mouseenter", () => {
+                        lemburBtn.classList.remove("active-btn");
+                        btn.classList.add("active-btn");
+                    });
+                    btn.addEventListener("mouseleave", () => {
+                        lemburBtn.classList.add("active-btn");
+                        btn.classList.remove("active-btn");
+                    });
+                });
             }
         });
     </script>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 </body>

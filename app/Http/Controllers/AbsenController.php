@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\MasterKaryawan;
 use App\Models\lapizin;
+use App\Models\lapcuti;
+use App\Models\laplembur;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 
@@ -64,7 +66,44 @@ class AbsenController extends Controller
                     }
                 }
 
-                return view('absen.create', compact('izinStatus', 'pdfAvailable', 'izin'));
+                // Cek status lembur terbaru
+                $lembur = Laplembur::where('nip', $nip)
+                    ->orderByDesc('created_at')
+                    ->first();
+                $lemburStatus = null;
+                $lemburPdfAvailable = false;
+
+                if ($lembur) {
+                    if ($lembur->status_hrd === 'disetujui' && $lembur->status_kepala_divisi === 'disetujui') {
+                        $lemburStatus = 'disetujui';
+                        $lemburPdfAvailable = true;
+                    } elseif ($lembur->status_hrd === 'ditolak' || $lembur->status_kepala_divisi === 'ditolak') {
+                        $lemburStatus = 'ditolak';
+                    }
+                }
+
+                // Cek status cuti terbaru
+                $cuti = Lapcuti::where('nip', $nip)
+                    ->orderByDesc('created_at')
+                    ->first();
+                $cutiStatus = null;
+                $cutiPdfAvailable = false;
+
+                if ($cuti) {
+                    if ($cuti->status_hrd === 'disetujui' && $cuti->status_kepala_divisi === 'disetujui') {
+                        $cutiStatus = 'disetujui';
+                        $cutiPdfAvailable = true;
+                    } elseif ($cuti->status_hrd === 'ditolak' || $cuti->status_kepala_divisi === 'ditolak') {
+                        $cutiStatus = 'ditolak';
+                    }
+                }
+
+
+                return view('absen.create', compact(
+                    'izinStatus', 'pdfAvailable', 'izin',
+                    'lemburStatus', 'lemburPdfAvailable', 'lembur',
+                    'cutiStatus', 'cutiPdfAvailable', 'cuti'
+                ));
             }
         }
 

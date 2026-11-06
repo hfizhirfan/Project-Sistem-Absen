@@ -55,7 +55,7 @@
                     </div>
                     <div class="col-md-6">
                         <label for="jam_absen" class="form-label">Jam Absen</label>
-                        <input type="datetime-local" class="form-control" id="jam_absen" name="jam_absen" required>
+                        <input type="text" class="form-control" id="jam_absen" name="jam_absen" readonly required>
                     </div>
                 </div>
 

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\laplembur;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class LaplemburController extends Controller
@@ -26,7 +27,7 @@ class LaplemburController extends Controller
 
     public function update(Request $request, $id)
     {
-        $laplembur = LapLembur::findOrFail($id);
+        $laplembur = laplembur::findOrFail($id);
         $role = session('role');
 
         if (!in_array($role, ['hrd', 'kepala_divisi', 'direktur'])) {
@@ -40,15 +41,12 @@ class LaplemburController extends Controller
                 $laplembur->status_hrd = 'disetujui';
             } elseif ($role === 'kepala_divisi') {
                 $laplembur->status_kepala_divisi = 'disetujui';
-            } elseif ($role === 'direktur') {
-                $laplembur->status_direktur = 'disetujui';
             }
 
             // Jika semua sudah setuju, set status utama menjadi disetujui
             if (
                 $laplembur->status_hrd === 'disetujui' &&
-                $laplembur->status_kepala_divisi === 'disetujui' &&
-                $laplembur->status_direktur === 'disetujui'
+                $laplembur->status_kepala_divisi === 'disetujui'
             ) {
                 $laplembur->status = 'disetujui';
             }
@@ -71,8 +69,6 @@ class LaplemburController extends Controller
                 $laplembur->status_hrd = 'ditolak';
             } elseif ($role === 'kepala_divisi') {
                 $laplembur->status_kepala_divisi = 'ditolak';
-            } elseif ($role === 'direktur') {
-                $laplembur->status_direktur = 'ditolak';
             }
 
             // Jika salah satu menolak, status utama otomatis ditolak
@@ -91,10 +87,18 @@ class LaplemburController extends Controller
 
     public function destroy($id)
     {
-        $laplembur = LapLembur::findOrFail($id);
+        $laplembur = laplembur::findOrFail($id);
         $laplembur->delete();
 
         return redirect()->route('laplembur.index')->with('success', 'Data lembur berhasil dihapus.');
+    }
+
+     public function downloadPDF($id)
+    {
+        $lembur = laplembur::findOrFail($id);
+
+        $pdf = Pdf::loadView('pdf.lembur', compact('lembur'));
+        return $pdf->download("lembur_{$lembur->nip}.pdf");
     }
 
 
